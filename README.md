@@ -74,7 +74,20 @@ npm install
 npm run dev
 ```
 
-The UI runs at `http://localhost:5173` and connects to the backend at `http://127.0.0.1:8001`.
+The UI runs at `http://localhost:5173` and connects to the backend at `http://3.21.168.210:8001` by default (the deployed EC2 endpoint).
+
+## Deployment
+
+The backend is deployed on AWS EC2 (Ubuntu 24.04, t2.micro). The FastAPI server runs on port 8001 and is accessible at `http://3.21.168.210:8001`.
+
+To start the server on EC2:
+
+```bash
+ssh -i llm-test-generator-key.pem ubuntu@3.21.168.210
+cd llm-test-generator/backend
+source ../venv/bin/activate
+uvicorn main:app --host 0.0.0.0 --port 8001
+```
 
 ## Example
 

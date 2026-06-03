@@ -1,22 +1,41 @@
 import json
+import os
 
-def load_spec(filepath: str)-> dict:
-    with open(filepath, "r") as f:
-        return json.load(f)
 
-def extract_endpoints(spec: dict) -> list:
-    endpoints = []
+def load_spec(path: str) -> dict:
+    if not os.path.exists(path):
+        raise FileNotFoundError(f"Spec file not found: {path}")
+    try:
+        with open(path, "r") as f:
+            spec = json.load(f)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Invalid JSON in spec file: {e}")
+    if not isinstance(spec, dict):
+        raise ValueError("Spec file must contain a JSON object at the top level")
+    return spec
+
+
+def extract_endpoints(spec: dict) -> list[dict]:
     paths = spec.get("paths", {})
-    
-    for path,method in paths.items():
-        for method,details in method.items():
-            endpoint = {
-            "path": path,
-            "method": method.upper(),
-            "summary": details.get("summary", ""),
-            "description": details.get("description", ""),
-            "request_body": details.get("requestBody", None),
-            "responses": details.get("responses", {})
-            }
-            endpoints.append(endpoint)
+    if not paths:
+        return []
+
+    endpoints = []
+    for path, path_item in paths.items():
+        if not isinstance(path_item, dict):
+            continue
+        for method, operation in path_item.items():
+            if method.lower() not in {"get", "post", "put", "patch", "delete", "head", "options"}:
+                continue
+            if not isinstance(operation, dict):
+                continue
+            endpoints.append({
+                "method": method.upper(),
+                "path": path,
+                "summary": operation.get("summary", ""),
+                "parameters": operation.get("parameters", []),
+                "request_body": operation.get("requestBody"),
+                "responses": operation.get("responses", {}),
+            })
+
     return endpoints
